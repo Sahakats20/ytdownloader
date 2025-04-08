@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-      ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.1.8937393  # Изменено на стабильную версию NDK
+      ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.1.8937393
 
     steps:
       - uses: actions/checkout@v4
@@ -37,23 +37,26 @@ jobs:
 
       - name: Prepare environment
         run: |
-          rm -rf .buildozer bin
-          buildozer init
-          echo "Вставьте сюда исправленный buildozer.spec" > buildozer.spec
+          # Удаляем только кэшированные данные
+          rm -rf .buildozer/android/platform/build-*
+          rm -rf bin
+          
+          # Инициализируем только если spec файла нет
+          if [ ! -f buildozer.spec ]; then
+              buildozer init
+          fi
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          ndk-version: '25.1.8937393'  # Стабильная версия NDK
+          ndk-version: '25.1.8937393'
           build-tools-version: '33.0.2'
           cmake-version: '3.22.1'
 
       - name: Apply critical patches
         run: |
-          # Применение патча для libffi
           find .buildozer -name "configure.ac" -exec patch -Np1 -i ../libffi-symbol-uscore.patch \; || true
           
-          # Обновление autotools
           LIBFFI_PATH=$(find .buildozer -path "*libffi/arm64-v8a*" -type d -name "libffi" | head -1)
           cd "$LIBFFI_PATH"
           autoreconf -fiv
@@ -66,7 +69,7 @@ jobs:
           buildozer -v android clean
           buildozer -v android release \
             -- \
-            --package-type aab \
+            --package-type apk \
             --gradle-version 8.3 \
             --depend "androidx.core:core-ktx:1.12.0" \
             --depend "com.android.tools.build:gradle:8.3.0"
@@ -75,4 +78,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: bin/*.aab
+          path: bin/*.apk
