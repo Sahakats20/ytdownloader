@@ -25,7 +25,7 @@ android.minapi = 26
 android.ndk = 25.1.8937393
 android.sdk_path = /usr/local/lib/android/sdk
 android.gradle_dependencies = 
-    com.android.tools.build:gradle:8.3.0,
+    com.android.tools.build:gradle:8.1.1,  # Обновлено до 8.1.1
     androidx.core:core-ktx:1.12.0
 
 [buildozer]
