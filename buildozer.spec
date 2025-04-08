@@ -28,6 +28,11 @@ android.gradle_dependencies =
     com.android.tools.build:gradle:8.3.0,
     androidx.core:core-ktx:1.12.0
 
+android.enable_androidx = True
+android.allow_backup = False
+android.accept_sdk_license = True
+
 [buildozer]
 log_level = 2
+p4a.branch = 2024.05.06
 allow_root = True
