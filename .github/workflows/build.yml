@@ -13,8 +13,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive  # Для клонирования подмодулей
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
@@ -37,13 +35,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install buildozer==1.5.0 cython==0.29.36 kivy==2.3.0
 
-      - name: Initialize environment
+      - name: Prepare environment
         run: |
-          rm -rf .buildozer bin
-          buildozer init
-          yes | buildozer android update  # Автоподтверждение настроек
-          git clone https://github.com/kivy/python-for-android.git \
-            .buildozer/android/platform/python-for-android
+          # Удаляем только кэш сборки
+          rm -rf .buildozer/android/platform/build-* bin
+          
+          # Инициализация python-for-android
+          if [ ! -d ".buildozer/android/platform/python-for-android" ]; then
+            git clone https://github.com/kivy/python-for-android.git \
+              .buildozer/android/platform/python-for-android
+          fi
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
