@@ -27,7 +27,7 @@ jobs:
               gettext pkg-config make \
               gcc g++ unzip flex bison \
               libffi-dev texinfo help2man \
-              openjdb-17-jdk cython3 \
+              openjdk-17-jdk cython3 \
               libltdl-dev zlib1g-dev
 
       - name: Install Buildozer
