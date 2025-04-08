@@ -1,0 +1,11 @@
+--- configure.ac
++++ configure.ac
+@@ -212,7 +212,7 @@
+     AC_DEFINE(USING_PURIFY, 1, [Define this if you are using Purify])
+   fi
+ fi
+-AC_DEFINE(LT_SYS_SYMBOL_USCORE, 0, [Define if symbols are underscored])
++AC_DEFINE([LT_SYS_SYMBOL_USCORE], [0], [Define if symbols are underscored])
+ 
+ # Check if we can use visibility attributes
+ AC_CHECK_CC_FLAG([-fvisibility=hidden], [CFLAGS="$CFLAGS -fvisibility=hidden"])
