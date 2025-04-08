@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
@@ -37,14 +39,10 @@ jobs:
 
       - name: Prepare environment
         run: |
-          # Удаляем только кэш сборки
-          rm -rf .buildozer/android/platform/build-* bin
-          
-          # Инициализация python-for-android
-          if [ ! -d ".buildozer/android/platform/python-for-android" ]; then
-            git clone https://github.com/kivy/python-for-android.git \
-              .buildozer/android/platform/python-for-android
-          fi
+          rm -rf .buildozer/android/platform/python-for-android
+          git clone --branch 2024.05.06 \
+            https://github.com/kivy/python-for-android.git \
+            .buildozer/android/platform/python-for-android
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -57,10 +55,12 @@ jobs:
         run: |
           cd .buildozer/android/platform/python-for-android
           git apply ../../../../libffi-symbol-uscore.patch || true
-          autoreconf -fiv
+          autoreconf --install
           aclocal
+          autoheader
           automake --add-missing
-          autoconf
+          libtoolize --force
+          autoreconf -fiv
 
       - name: Build APK
         run: |
