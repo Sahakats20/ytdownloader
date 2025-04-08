@@ -13,6 +13,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Set up Python 3.10
         uses: actions/setup-python@v4
@@ -65,10 +67,9 @@ jobs:
           buildozer -v android clean
           buildozer -v android release \
             -- \
-            --package-type apk \
-            --gradle-version 8.3 \
+            --gradle-version 8.0.2 \
             --depend "androidx.core:core-ktx:1.12.0" \
-            --depend "com.android.tools.build:gradle:8.3.0"
+            --depend "com.android.tools.build:gradle:8.1.1"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
