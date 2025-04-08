@@ -1,81 +1,28 @@
-name: Build APK
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
-      ANDROID_NDK_HOME: /usr/local/lib/android/sdk/ndk/25.1.8937393
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-              autoconf automake libtool \
-              gettext pkg-config make \
-              gcc g++ unzip flex bison \
-              libffi-dev texinfo help2man \
-              openjdk-17-jdk cython3 \
-              libltdl-dev zlib1g-dev
-
-      - name: Install Buildozer
-        run: |
-          python -m pip install --upgrade pip
-          pip install buildozer cython==0.29.36 kivy==2.3.0
-
-      - name: Prepare environment
-        run: |
-          # Удаляем только кэшированные данные
-          rm -rf .buildozer/android/platform/build-*
-          rm -rf bin
-          
-          # Инициализируем только если spec файла нет
-          if [ ! -f buildozer.spec ]; then
-              buildozer init
-          fi
-
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          ndk-version: '25.1.8937393'
-          build-tools-version: '33.0.2'
-          cmake-version: '3.22.1'
-
-      - name: Apply critical patches
-        run: |
-          find .buildozer -name "configure.ac" -exec patch -Np1 -i ../libffi-symbol-uscore.patch \; || true
-          
-          LIBFFI_PATH=$(find .buildozer -path "*libffi/arm64-v8a*" -type d -name "libffi" | head -1)
-          cd "$LIBFFI_PATH"
-          autoreconf -fiv
-          aclocal
-          automake --add-missing
-          autoconf
-
-      - name: Build APK
-        run: |
-          buildozer -v android clean
-          buildozer -v android release \
-            -- \
-            --package-type apk \
-            --gradle-version 8.3 \
-            --depend "androidx.core:core-ktx:1.12.0" \
-            --depend "com.android.tools.build:gradle:8.3.0"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release
-          path: bin/*.apk
+- name: Apply critical patches
+  run: |
+    # Инициализация структуры Buildozer
+    buildozer android clean
+    buildozer android update
+    
+    # Проверка существования патча
+    if [ ! -f "libffi-symbol-uscore.patch" ]; then
+      echo "❌ libffi-symbol-uscore.patch не найден!"
+      exit 1
+    fi
+    
+    # Применение патча
+    LIBFFI_CONFIGURE=$(find .buildozer/android/platform -name "configure.ac")
+    if [ -z "$LIBFFI_CONFIGURE" ]; then
+      echo "❌ configure.ac не найден!"
+      exit 1
+    fi
+    
+    patch -d $(dirname "$LIBFFI_CONFIGURE") -p1 < libffi-symbol-uscore.patch || true
+    
+    # Пересборка libffi
+    LIBFFI_PATH=$(find .buildozer -path "*libffi/arm64-v8a*" -type d -name "libffi" | head -1)
+    cd "$LIBFFI_PATH"
+    autoreconf -fiv
+    aclocal
+    automake --add-missing
+    autoconf
